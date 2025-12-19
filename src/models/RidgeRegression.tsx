@@ -28,6 +28,7 @@ export default function RidgeRegression() {
 
   const [params, setParams] = useState<Record<string, any>>({});
   const [dataset, setDataset] = useState<File | null>(null);
+  const [modelId, setModelId] = useState<string | null>(null);
 
   function updateParam(id: string, value: any) {
     setParams(prev => ({ ...prev, [id]: value }));
@@ -39,19 +40,44 @@ export default function RidgeRegression() {
     }
   }
 
-  function handleFit() {
+  async function handleFit() {
     if (!dataset) {
       alert("Upload a dataset first");
       return;
     }
 
-    console.log("MODEL:", model.desc);
-    console.log("PARAMS:", params);
-    console.log("DATASET:", dataset);
+    const formData = new FormData();
+    formData.append("dataset", dataset);
+    formData.append("params", JSON.stringify(params));
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/train", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error("Training failed");
+      }
+
+      const data = await res.json();
+      setModelId(data.model_id);
+
+      console.log("Training result:", data);
+      alert("Model trained successfully");
+    } catch (err) {
+      console.error(err);
+      alert("Error while training model");
+    }
   }
 
   function handleDownload() {
-    alert("Model download will be available after training");
+    if (!modelId) {
+      alert("Train the model first");
+      return;
+    }
+
+    window.location.href = `http://127.0.0.1:8000/download/${modelId}`;
   }
 
   return (
