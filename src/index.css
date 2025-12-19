@@ -1,0 +1,55 @@
+/* 1️⃣ Tailwind MUST be first */
+@import "tailwindcss";
+
+/* 2️⃣ Browser fixes (global overrides) */
+
+/* Remove number input spinners */
+/* Chrome, Edge, Safari */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* 3️⃣ Fonts */
+@font-face {
+  font-family: "Akhenaton";
+  src: url("./assets/fonts/Akhenaton.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Fenix";
+  src: url("./assets/fonts/Fenix-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Prata";
+  src: url("./assets/fonts/Prata-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* 4️⃣ Tailwind theme tokens */
+@theme {
+  --color-primary-base: #fffbea;
+  --color-primary-highlight: #fff4b8;
+  --color-primary-sandy: #f4e4a5;
+  --color-primary-deep: #d8c47a;
+  --color-primary-border: #c1a96b;
+  --color-primary-text: #3c2f1e;
+  --color-secondary-text: #6a573a;
+
+  --font-akhenaton: "Akhenaton", sans-serif;
+  --font-fenix: "Fenix", serif;
+  --font-prata: "Prata", serif;
+}

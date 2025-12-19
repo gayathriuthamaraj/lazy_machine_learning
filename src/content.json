@@ -1,0 +1,249 @@
+[
+  {
+    "id": 1,
+    "desc": "Linear Regression",
+    "dropdown": {
+      "count": 3,
+      "content": [
+        { "id": 1, "desc": "fit_intercept", "options": ["True", "False"] },
+        { "id": 2, "desc": "copy_X", "options": ["True", "False"] },
+        { "id": 3, "desc": "positive", "options": ["True", "False"] }
+      ]
+    },
+    "number_input": {
+      "count": 2,
+      "content": [
+        {
+          "id": 1,
+          "desc": "n_jobs",
+          "float_bool": false,
+          "allowMax": false,
+          "allowMin": true,
+          "min": -1
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 2,
+    "desc": "Logistic Regression",
+    "dropdown": {
+      "count": 4,
+      "content": [
+        { "id": 1, "desc": "penalty", "options": ["l2", "l1", "elasticnet", "none"] },
+        { "id": 2, "desc": "solver", "options": ["lbfgs", "liblinear", "saga", "newton-cg"] },
+        { "id": 3, "desc": "fit_intercept", "options": ["True", "False"] },
+        { "id": 4, "desc": "multi_class", "options": ["auto", "ovr", "multinomial"] }
+      ]
+    },
+    "number_input": {
+      "count": 3,
+      "content": [
+        {
+          "id": 1,
+          "desc": "C",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0.0001
+        },
+        {
+          "id": 2,
+          "desc": "max_iter",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        },
+        {
+          "id": 3,
+          "desc": "l1_ratio",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0,
+          "allowMax": true,
+          "max": 1
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 3,
+    "desc": "Ridge Regression",
+    "dropdown": {
+      "count": 2,
+      "content": [
+        { "id": 1, "desc": "fit_intercept", "options": ["True", "False"] },
+        { "id": 2, "desc": "solver", "options": ["auto", "svd", "cholesky", "lsqr", "sag"] }
+      ]
+    },
+    "number_input": {
+      "count": 2,
+      "content": [
+        {
+          "id": 1,
+          "desc": "alpha",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0
+        },
+        {
+          "id": 2,
+          "desc": "max_iter",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 4,
+    "desc": "Lasso Regression",
+    "dropdown": {
+      "count": 1,
+      "content": [
+        { "id": 1, "desc": "fit_intercept", "options": ["True", "False"] }
+      ]
+    },
+    "number_input": {
+      "count": 3,
+      "content": [
+        {
+          "id": 1,
+          "desc": "alpha",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0
+        },
+        {
+          "id": 2,
+          "desc": "max_iter",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        },
+        {
+          "id": 3,
+          "desc": "tol",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 5,
+    "desc": "K Nearest Neighbors",
+    "dropdown": {
+      "count": 4,
+      "content": [
+        { "id": 1, "desc": "weights", "options": ["uniform", "distance"] },
+        { "id": 2, "desc": "algorithm", "options": ["auto", "ball_tree", "kd_tree", "brute"] },
+        { "id": 3, "desc": "metric", "options": ["minkowski", "euclidean", "manhattan"] },
+        { "id": 4, "desc": "p", "options": ["1", "2"] }
+      ]
+    },
+    "number_input": {
+      "count": 1,
+      "content": [
+        {
+          "id": 1,
+          "desc": "n_neighbors",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 6,
+    "desc": "Support Vector Machine",
+    "dropdown": {
+      "count": 4,
+      "content": [
+        { "id": 1, "desc": "kernel", "options": ["linear", "poly", "rbf", "sigmoid"] },
+        { "id": 2, "desc": "shrinking", "options": ["True", "False"] },
+        { "id": 3, "desc": "probability", "options": ["True", "False"] },
+        { "id": 4, "desc": "gamma", "options": ["scale", "auto"] }
+      ]
+    },
+    "number_input": {
+      "count": 3,
+      "content": [
+        {
+          "id": 1,
+          "desc": "C",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0.0001
+        },
+        {
+          "id": 2,
+          "desc": "degree",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        },
+        {
+          "id": 3,
+          "desc": "coef0",
+          "float_bool": true,
+          "allowMin": true,
+          "min": 0
+        }
+      ]
+    }
+  },
+
+  {
+    "id": 7,
+    "desc": "Random Forest",
+    "dropdown": {
+      "count": 3,
+      "content": [
+        { "id": 1, "desc": "criterion", "options": ["gini", "entropy", "log_loss"] },
+        { "id": 2, "desc": "bootstrap", "options": ["True", "False"] },
+        { "id": 3, "desc": "max_features", "options": ["sqrt", "log2", "None"] }
+      ]
+    },
+    "number_input": {
+      "count": 4,
+      "content": [
+        {
+          "id": 1,
+          "desc": "n_estimators",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        },
+        {
+          "id": 2,
+          "desc": "max_depth",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        },
+        {
+          "id": 3,
+          "desc": "min_samples_split",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 2
+        },
+        {
+          "id": 4,
+          "desc": "min_samples_leaf",
+          "float_bool": false,
+          "allowMin": true,
+          "min": 1
+        }
+      ]
+    }
+  }
+]
