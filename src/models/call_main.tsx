@@ -9,9 +9,6 @@ import RandomForest from "./RandomForest";
 export default function CallMain() {
   return (
     <div className="space-y-10">
-      <select name="model_id" id="model_id">
-        <option value="LinearRegression"></option>
-      </select>
       <LinearRegression /><LogisticRegression /><RidgeRegression /><LassoRegression /><KNearestNeighbors /><SupportVectorMachine /><RandomForest />
     </div>
   );

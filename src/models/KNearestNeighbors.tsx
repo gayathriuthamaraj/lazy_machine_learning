@@ -1,6 +1,8 @@
+import { useState } from "react";
 import data from "../content.json";
 import Dropdown from "../components/dropdown";
 import NumberInput from "../components/number";
+import Button from "../components/Button";
 
 type DropdownItem = {
   id: number;
@@ -24,26 +26,93 @@ export default function KNearestNeighbors() {
   const dropdown_items = (model?.dropdown?.content ?? []) as DropdownItem[];
   const number_items = (model?.number_input?.content ?? []) as NumberItem[];
 
+  const [params, setParams] = useState<Record<string, any>>({});
+  const [dataset, setDataset] = useState<File | null>(null);
+
+  function updateParam(id: string, value: any) {
+    setParams(prev => ({ ...prev, [id]: value }));
+  }
+
+  function handleDatasetUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files && e.target.files[0]) {
+      setDataset(e.target.files[0]);
+    }
+  }
+
+  function handleFit() {
+    if (!dataset) {
+      alert("Upload a dataset first");
+      return;
+    }
+
+    console.log("MODEL:", model.desc);
+    console.log("PARAMS:", params);
+    console.log("DATASET:", dataset);
+  }
+
+  function handleDownload() {
+    alert("Model download will be available after training");
+  }
+
   return (
-    <div className="flex justify-center-safe items-center-safe min-h-screen min-w-screen select-none">
-      <div className="border-2 rounded bg-primary-highlight border-primary-text pb-3 pt-10 px-5">
+    <div className="flex justify-center-safe items-center-safe min-h-screen">
+      <div className="border-2 rounded bg-primary-highlight border-primary-text pb-4 pt-6 px-5 w-fit">
         <h1 className="text-xl font-semibold mb-4">{model.desc}</h1>
 
-        {dropdown_items.map(item => (
-          <Dropdown key={item.id} id={item.desc} options={item.options} />
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {dropdown_items.map(item => (
+            <Dropdown
+              key={item.id}
+              id={item.desc}
+              options={item.options}
+              onChange={updateParam}
+            />
+          ))}
 
-        {number_items.map(item => (
-          <NumberInput
-            key={item.id}
-            id={item.desc}
-            float={item.float_bool}
-            allowMin={item.allowMin}
-            allowMax={item.allowMax}
-            min={item.min}
-            max={item.max}
+          {number_items.map(item => (
+            <NumberInput
+              key={item.id}
+              id={item.desc}
+              float={item.float_bool}
+              min={item.min}
+              max={item.max}
+              allowMin={item.allowMin}
+              allowMax={item.allowMax}
+              onChange={updateParam}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4">
+          <label className="text-sm block mb-1">Dataset (CSV)</label>
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleDatasetUpload}
+            className="text-sm"
           />
-        ))}
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <Button
+            label="Add Dataset"
+            variant="secondary"
+            onClick={() => {
+              if (!dataset) alert("No dataset uploaded");
+            }}
+          />
+
+          <Button
+            label="Create & Fit Model"
+            onClick={handleFit}
+          />
+
+          <Button
+            label="Download Model"
+            variant="secondary"
+            onClick={handleDownload}
+          />
+        </div>
       </div>
     </div>
   );

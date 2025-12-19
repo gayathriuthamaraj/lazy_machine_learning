@@ -20,8 +20,8 @@ type NumberItem = {
   max?: number;
 };
 
-export default function LinearRegression() {
-  const model = data[0];
+export default function {{ component_name }}() {
+  const model = data[{{ index }}];
 
   const dropdown_items = (model?.dropdown?.content ?? []) as DropdownItem[];
   const number_items = (model?.number_input?.content ?? []) as NumberItem[];
