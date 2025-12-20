@@ -1,18 +1,41 @@
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import FileResponse
-from uuid import uuid4
+from fastapi.middleware.cors import CORSMiddleware
+
 import pandas as pd
 import joblib
 import os
 import json
+from uuid import uuid4
 
 from sklearn.linear_model import LinearRegression
 
+# -------------------- APP --------------------
+
 app = FastAPI()
 
-MODEL_DIR = "models/saved"
+# -------------------- CORS --------------------
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# -------------------- STORAGE --------------------
+
+MODEL_DIR = "backend/models/saved"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
+# -------------------- ROUTES --------------------
+def coerce_bool(value):
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() == "true"
+    return False
 
 @app.post("/train")
 async def train_model(
@@ -20,16 +43,23 @@ async def train_model(
     params: str = Form(...)
 ):
     """
-    params: JSON string of hyperparameters
-    dataset: CSV file
+    Train Linear Regression
+    CSV must contain a column named 'target'
     """
 
     # Parse params
-    params_dict = json.loads(params)
+    try:
+        params_dict = json.loads(params)
+    except Exception:
+        return {"error": "Invalid params JSON"}
 
-    # Read CSV
-    df = pd.read_csv(dataset.file)
+    # Load CSV
+    try:
+        df = pd.read_csv(dataset.file)
+    except Exception:
+        return {"error": "Invalid CSV file"}
 
+    # Validate target
     if "target" not in df.columns:
         return {"error": "CSV must contain a 'target' column"}
 
@@ -38,10 +68,14 @@ async def train_model(
 
     # Create model
     model = LinearRegression(
-        fit_intercept=params_dict.get("fit_intercept", True),
-        copy_X=params_dict.get("copy_X", True),
-        positive=params_dict.get("positive", False),
-        n_jobs=params_dict.get("n_jobs", None),
+    fit_intercept=coerce_bool(params_dict.get("fit_intercept", True)),
+    copy_X=coerce_bool(params_dict.get("copy_X", True)),
+    positive=coerce_bool(params_dict.get("positive", False)),
+    n_jobs=(
+        int(params_dict["n_jobs"])
+        if "n_jobs" in params_dict and params_dict["n_jobs"] != ""
+        else None
+        ),
     )
 
     # Train
