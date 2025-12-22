@@ -4,8 +4,6 @@ import Dropdown from "./components/dropdown";
 import NumberInput from "./components/number";
 import Button from "./components/Button";
 
-//this is actually really great
-
 type DropdownItem = {
   id: number;
   desc: string;
@@ -33,16 +31,7 @@ export default function Theme_check() {
   const [params, setParams] = useState<Record<string, ParamValue>>({});
   const [dataset, setDataset] = useState<File | null>(null);
   const [modelId, setModelId] = useState<string | null>(null);
-
-  const [spanfor, setSpanfor] = useState<string>("");
-
-  function updateSpan(bool : boolean){
-    if (bool){
-        setSpanfor("dataset is added to the model");
-    } else {
-        setSpanfor("");
-    }
-  }
+  const [datasetStatus, setDatasetStatus] = useState<string>("");
 
   function updateParam(id: string, value: ParamValue) {
     setParams(prev => ({ ...prev, [id]: value }));
@@ -51,6 +40,10 @@ export default function Theme_check() {
   function handleDatasetUpload(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.files && e.target.files[0]) {
       setDataset(e.target.files[0]);
+      setDatasetStatus("Dataset added to the model");
+    } else {
+      setDataset(null);
+      setDatasetStatus("");
     }
   }
 
@@ -100,6 +93,7 @@ export default function Theme_check() {
                       bg-primary-highlight/90 backdrop-blur
                       shadow-lg shadow-black/10 p-7">
 
+        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">
             {model.desc}
@@ -109,6 +103,7 @@ export default function Theme_check() {
           </p>
         </div>
 
+        {/* Parameters */}
         <section className="mb-7">
           <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70 mb-3">
             Model Parameters
@@ -153,11 +148,7 @@ export default function Theme_check() {
             <input
               type="file"
               accept=".csv"
-              onChange={
-                (e) => {
-                handleDatasetUpload(e);
-                }
-              }
+              onChange={handleDatasetUpload}
               className="text-sm
                          file:mr-4 file:py-2 file:px-4
                          file:rounded-lg file:border-0
@@ -166,33 +157,21 @@ export default function Theme_check() {
                          hover:file:opacity-90"
             />
 
-              <span className="text-xs opacity-80 truncate max-w-60">
-                {spanfor}
+            {datasetStatus && (
+              <span className="text-xs text-green-400 opacity-80 truncate max-w-60">
+                {datasetStatus}
               </span>
+            )}
           </div>
         </section>
 
         {/* Actions */}
         <section className="pt-5 border-t border-primary-text/20
-                            flex flex-wrap gap-4 justify-end">
-          <Button
-            label="Add Dataset"
-            variant="secondary"
-            onClick={() => {
-              if (!dataset) 
-                {   
-                    alert("No dataset uploaded")
-                } else {
-                    {
-                        updateSpan(true);
-                    }
-                }
-            }}
-          />
-
+                            flex flex-wrap gap-4">
           <Button
             label="Create & Fit Model"
             onClick={handleFit}
+            disabled={!dataset}
           />
 
           <Button
