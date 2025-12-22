@@ -34,6 +34,16 @@ export default function Theme_check() {
   const [dataset, setDataset] = useState<File | null>(null);
   const [modelId, setModelId] = useState<string | null>(null);
 
+  const [spanfor, setSpanfor] = useState<string>("");
+
+  function updateSpan(bool : boolean){
+    if (bool){
+        setSpanfor("dataset is added to the model");
+    } else {
+        setSpanfor("");
+    }
+  }
+
   function updateParam(id: string, value: ParamValue) {
     setParams(prev => ({ ...prev, [id]: value }));
   }
@@ -82,7 +92,7 @@ export default function Theme_check() {
 
   return (
     <div className="min-h-screen flex items-center justify-center-safe
-                    bg-gradient-to-br from-primary-background to-black/10
+                    bg-linear-to-br from-primary-background to-black/10
                     select-none px-4">
 
       <div className="w-full max-w-4xl
@@ -90,7 +100,6 @@ export default function Theme_check() {
                       bg-primary-highlight/90 backdrop-blur
                       shadow-lg shadow-black/10 p-7">
 
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight">
             {model.desc}
@@ -100,7 +109,6 @@ export default function Theme_check() {
           </p>
         </div>
 
-        {/* Parameters */}
         <section className="mb-7">
           <h2 className="text-sm font-semibold uppercase tracking-wide opacity-70 mb-3">
             Model Parameters
@@ -145,7 +153,11 @@ export default function Theme_check() {
             <input
               type="file"
               accept=".csv"
-              onChange={handleDatasetUpload}
+              onChange={
+                (e) => {
+                handleDatasetUpload(e);
+                }
+              }
               className="text-sm
                          file:mr-4 file:py-2 file:px-4
                          file:rounded-lg file:border-0
@@ -154,15 +166,9 @@ export default function Theme_check() {
                          hover:file:opacity-90"
             />
 
-            {dataset ? (
-              <span className="text-xs opacity-80 truncate max-w-[240px]">
-                {dataset.name}
+              <span className="text-xs opacity-80 truncate max-w-60">
+                {spanfor}
               </span>
-            ) : (
-              <span className="text-xs opacity-50">
-                No file selected
-              </span>
-            )}
           </div>
         </section>
 
@@ -173,7 +179,14 @@ export default function Theme_check() {
             label="Add Dataset"
             variant="secondary"
             onClick={() => {
-              if (!dataset) alert("No dataset uploaded");
+              if (!dataset) 
+                {   
+                    alert("No dataset uploaded")
+                } else {
+                    {
+                        updateSpan(true);
+                    }
+                }
             }}
           />
 
