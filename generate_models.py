@@ -12,11 +12,12 @@ os.makedirs(OUT_DIR, exist_ok=True)
 def safe_name(name: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", name)
 
-# Load models
-with open(CONTENT_JSON, "r") as f:
+def route_name(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+with open(CONTENT_JSON, "r", encoding="utf-8") as f:
     models = json.load(f)
 
-# Setup Jinja
 env = Environment(
     loader=FileSystemLoader(TEMPLATE_DIR),
     autoescape=False
@@ -24,11 +25,14 @@ env = Environment(
 
 template = env.get_template("model.tsx.jinja")
 
-imports = []
-renders = []
+route_entries = []
+import_entries = []
 
+# Generate model components
 for index, model in enumerate(models):
     component_name = safe_name(model["desc"])
+    route_path = route_name(model["desc"])
+
     file_path = os.path.join(OUT_DIR, f"{component_name}.tsx")
 
     tsx_code = template.render(
@@ -39,22 +43,22 @@ for index, model in enumerate(models):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(tsx_code)
 
-    imports.append(f'import {component_name} from "./{component_name}";')
-    renders.append(f"<{component_name} />")
+    import_entries.append(
+        f'import {component_name} from "./{component_name}";'
+    )
 
-# Generate call_main.tsx
-call_main = f"""{chr(10).join(imports)}
+    route_entries.append(
+        f'{{ name: "{model["desc"]}", path: "/models/{route_path}", element: <{component_name} /> }},'
+    )
 
-export default function CallMain() {{
-  return (
-    <div className="space-y-10">
-      {"".join(renders)}
-    </div>
-  );
-}}
+routes_file = f"""{"\n".join(import_entries)}
+
+export const modelRoutes = [
+  {chr(10).join(route_entries)}
+];
 """
 
-with open(os.path.join(OUT_DIR, "call_main.tsx"), "w", encoding="utf-8") as f:
-    f.write(call_main)
+with open(os.path.join(OUT_DIR, "modelRoutes.tsx"), "w", encoding="utf-8") as f:
+    f.write(routes_file)
 
-print("Model components and call_main.tsx generated successfully")
+print("Model pages and modelRoutes.tsx generated successfully")
