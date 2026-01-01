@@ -9,6 +9,11 @@ import json
 from uuid import uuid4
 from typing import Optional
 
+import plotly.graph_objects as go
+
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+import numpy as np
+
 from sklearn.linear_model import LinearRegression
 
 # -------------------- APP --------------------
@@ -127,6 +132,38 @@ async def train_model(
 
     model.fit(X, y)
 
+    # Predictions
+    y_pred = model.predict(X)
+
+    # -------------------- METRICS --------------------
+
+    r2 = r2_score(y, y_pred)
+    rmse = float(np.sqrt(mean_squared_error(y, y_pred)))
+    mae = mean_absolute_error(y, y_pred)
+
+    metrics = {
+        "r2": r2,
+        "rmse": rmse,
+        "mae": mae
+    }
+
+    # Plot: Actual vs Predicted
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=y,
+        y=y_pred,
+        mode="markers",
+        name="Predictions"
+    ))
+
+    fig.update_layout(
+        title="Actual vs Predicted",
+        xaxis_title="Actual Values",
+        yaxis_title="Predicted Values",
+    )
+
+    plot_json = fig.to_json()
+
     model_id = str(uuid4())
     model_path = os.path.join(user_model_dir(user_id), f"{model_id}.pkl")
     joblib.dump(model, model_path)
@@ -145,7 +182,9 @@ async def train_model(
 
     return {
         "model_id": model_id,
-        "features": list(X.columns)
+        "features": list(X.columns),
+        "plot": plot_json,
+        "metrics": metrics
     }
 
 # -------------------- LIST MODELS --------------------

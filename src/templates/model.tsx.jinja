@@ -4,6 +4,7 @@ import Dropdown from "../components/dropdown";
 import NumberInput from "../components/number";
 import Button from "../components/Button";
 import { apiUpload } from "../api/upload";
+import Plot from "react-plotly.js";
 
 type DropdownItem = {
   id: number;
@@ -21,6 +22,12 @@ type NumberItem = {
   max?: number;
 };
 
+type ModelMetrics = {
+  r2: number;
+  rmse: number;
+  mae: number;
+};
+
 type ModelParams = Record<string, string | number | boolean>;
 
 export default function {{ component_name }}() {
@@ -33,6 +40,8 @@ export default function {{ component_name }}() {
   const [dataset, setDataset] = useState<File | null>(null);
   const [modelId, setModelId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [plot, setPlot] = useState<any | null>(null);
+  const [metrics, setMetrics] = useState<ModelMetrics | null>(null);
 
   function updateParam(id: string, value: string | number | boolean) {
     setParams(prev => ({ ...prev, [id]: value }));
@@ -56,9 +65,10 @@ export default function {{ component_name }}() {
 
     try {
       setLoading(true);
-
       const res = await apiUpload("/train", formData);
       setModelId(res.model_id);
+      setPlot(JSON.parse(res.plot));
+      setMetrics(res.metrics);
 
       alert("Model trained successfully");
     } catch (err: unknown) {
@@ -135,6 +145,42 @@ export default function {{ component_name }}() {
             disabled={!modelId}
           />
         </div>
+        {% raw %}
+        {metrics && (
+          <div className="mt-6 grid grid-cols-3 gap-4 text-center">
+            <div className="border rounded p-3 bg-primary-base">
+              <div className="text-xs opacity-70">R²</div>
+              <div className="text-lg font-semibold">
+                {metrics.r2.toFixed(4)}
+              </div>
+            </div>
+
+            <div className="border rounded p-3 bg-primary-base">
+              <div className="text-xs opacity-70">RMSE</div>
+              <div className="text-lg font-semibold">
+                {metrics.rmse.toFixed(4)}
+              </div>
+            </div>
+
+            <div className="border rounded p-3 bg-primary-base">
+              <div className="text-xs opacity-70">MAE</div>
+              <div className="text-lg font-semibold">
+                {metrics.mae.toFixed(4)}
+              </div>
+            </div>
+          </div>
+        )}
+        {plot && (
+          <div className="mt-6">
+            <Plot
+              data={plot.data}
+              layout={plot.layout}
+              style={{ width: "100%", height: "400px" }}
+            />
+          </div>
+        )}
+        {% endraw %}
+
       </div>
     </div>
   );

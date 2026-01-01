@@ -14,6 +14,34 @@
         "DiabetesPedigreeFunction",
         "Age"
       ]
+    },
+    {
+      "id": "0e35f35e-ade9-43f4-9a30-2c1dd3ed13b5",
+      "algo": "linear_regression",
+      "features": [
+        "Pregnancies",
+        "Glucose",
+        "BloodPressure",
+        "SkinThickness",
+        "Insulin",
+        "BMI",
+        "DiabetesPedigreeFunction",
+        "Age"
+      ]
+    },
+    {
+      "id": "170a211c-723e-43d0-a03d-110dfc259483",
+      "algo": "linear_regression",
+      "features": [
+        "Pregnancies",
+        "Glucose",
+        "BloodPressure",
+        "SkinThickness",
+        "Insulin",
+        "BMI",
+        "DiabetesPedigreeFunction",
+        "Age"
+      ]
     }
   ]
 }
