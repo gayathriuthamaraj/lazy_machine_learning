@@ -1,0 +1,19 @@
+{
+  "email": "neyaa29@example.com",
+  "models": [
+    {
+      "id": "dcaf1efd-9770-4b51-a271-3a64a113707c",
+      "algo": "linear_regression",
+      "features": [
+        "Pregnancies",
+        "Glucose",
+        "BloodPressure",
+        "SkinThickness",
+        "Insulin",
+        "BMI",
+        "DiabetesPedigreeFunction",
+        "Age"
+      ]
+    }
+  ]
+}

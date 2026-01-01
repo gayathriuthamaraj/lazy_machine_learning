@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException, Header
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -7,6 +7,7 @@ import joblib
 import os
 import json
 from uuid import uuid4
+from typing import Optional
 
 from sklearn.linear_model import LinearRegression
 
@@ -18,7 +19,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,10 +27,15 @@ app.add_middleware(
 
 # -------------------- STORAGE --------------------
 
-MODEL_DIR = "backend/models/saved"
-os.makedirs(MODEL_DIR, exist_ok=True)
+BASE_DIR = "backend"
+MODEL_DIR = os.path.join(BASE_DIR, "models", "saved")
+META_DIR = os.path.join(BASE_DIR, "metadata")
 
-# -------------------- ROUTES --------------------
+os.makedirs(MODEL_DIR, exist_ok=True)
+os.makedirs(META_DIR, exist_ok=True)
+
+# -------------------- UTILS --------------------
+
 def coerce_bool(value):
     if isinstance(value, bool):
         return value
@@ -37,72 +43,141 @@ def coerce_bool(value):
         return value.lower() == "true"
     return False
 
+def get_user_from_token(
+    authorization: Optional[str] = Header(None)
+):
+    """
+    Expects:
+      Authorization: Bearer <user_id>
+    """
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid auth scheme")
+
+    token = authorization.replace("Bearer ", "").strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    return token  # token == user_id (simple for now)
+
+def user_model_dir(user_id: str):
+    path = os.path.join(MODEL_DIR, user_id)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def user_meta_path(user_id: str):
+    return os.path.join(META_DIR, f"{user_id}.json")
+
+# -------------------- AUTH --------------------
+
+@app.post("/auth/signup")
+def signup(email: str = Form(...), password: str = Form(...)):
+    user_id = email
+    meta_path = user_meta_path(user_id)
+
+    if os.path.exists(meta_path):
+        raise HTTPException(status_code=400, detail="User already exists")
+
+    with open(meta_path, "w") as f:
+        json.dump({"email": email, "models": []}, f, indent=2)
+
+    return {"token": user_id}
+
+@app.post("/auth/login")
+def login(email: str = Form(...), password: str = Form(...)):
+    meta_path = user_meta_path(email)
+
+    if not os.path.exists(meta_path):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    return {"token": email}
+
+# -------------------- TRAIN --------------------
+
 @app.post("/train")
 async def train_model(
     dataset: UploadFile = File(...),
-    params: str = Form(...)
+    params: str = Form(...),
+    user_id: str = Depends(get_user_from_token)
 ):
-    """
-    Train Linear Regression
-    CSV must contain a column named 'target'
-    """
-
-    # Parse params
     try:
         params_dict = json.loads(params)
     except Exception:
-        return {"error": "Invalid params JSON"}
+        raise HTTPException(status_code=400, detail="Invalid params JSON")
 
-    # Load CSV
     try:
         df = pd.read_csv(dataset.file)
     except Exception:
-        return {"error": "Invalid CSV file"}
+        raise HTTPException(status_code=400, detail="Invalid CSV")
 
-    # Validate target
     if "target" not in df.columns:
-        return {"error": "CSV must contain a 'target' column"}
+        raise HTTPException(status_code=400, detail="CSV must contain 'target' column")
 
     X = df.drop(columns=["target"])
     y = df["target"]
 
-    # Create model
     model = LinearRegression(
-    fit_intercept=coerce_bool(params_dict.get("fit_intercept", True)),
-    copy_X=coerce_bool(params_dict.get("copy_X", True)),
-    positive=coerce_bool(params_dict.get("positive", False)),
-    n_jobs=(
-        int(params_dict["n_jobs"])
-        if "n_jobs" in params_dict and params_dict["n_jobs"] != ""
-        else None
-        ),
+        fit_intercept=coerce_bool(params_dict.get("fit_intercept", True)),
+        copy_X=coerce_bool(params_dict.get("copy_X", True)),
+        positive=coerce_bool(params_dict.get("positive", False)),
+        n_jobs=int(params_dict["n_jobs"]) if params_dict.get("n_jobs") else None,
     )
 
-    # Train
     model.fit(X, y)
 
-    # Save model
     model_id = str(uuid4())
-    model_path = os.path.join(MODEL_DIR, f"{model_id}.pkl")
+    model_path = os.path.join(user_model_dir(user_id), f"{model_id}.pkl")
     joblib.dump(model, model_path)
+
+    meta_path = user_meta_path(user_id)
+    with open(meta_path, "r+") as f:
+        meta = json.load(f)
+        meta["models"].append({
+            "id": model_id,
+            "algo": "linear_regression",
+            "features": list(X.columns)
+        })
+        f.seek(0)
+        json.dump(meta, f, indent=2)
+        f.truncate()
 
     return {
         "model_id": model_id,
-        "features": list(X.columns),
-        "coefficients": model.coef_.tolist(),
-        "intercept": model.intercept_
+        "features": list(X.columns)
     }
 
+# -------------------- LIST MODELS --------------------
+
+@app.get("/models")
+def list_models(user_id: str = Depends(get_user_from_token)):
+    meta_path = user_meta_path(user_id)
+    if not os.path.exists(meta_path):
+        return []
+    with open(meta_path) as f:
+        return json.load(f)["models"]
+
+# -------------------- GET MODEL --------------------
+
+@app.get("/models/{model_id}")
+def get_model(model_id: str, user_id: str = Depends(get_user_from_token)):
+    meta_path = user_meta_path(user_id)
+    with open(meta_path) as f:
+        meta = json.load(f)
+
+    for m in meta["models"]:
+        if m["id"] == model_id:
+            return m
+
+    raise HTTPException(status_code=404, detail="Model not found")
+
+# -------------------- DOWNLOAD --------------------
 
 @app.get("/download/{model_id}")
-def download_model(model_id: str):
-    model_path = os.path.join(MODEL_DIR, f"{model_id}.pkl")
+def download_model(model_id: str, user_id: str = Depends(get_user_from_token)):
+    path = os.path.join(user_model_dir(user_id), f"{model_id}.pkl")
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Model not found")
 
-    if not os.path.exists(model_path):
-        return {"error": "Model not found"}
-
-    return FileResponse(
-        model_path,
-        media_type="application/octet-stream",
-        filename=f"linear_regression_{model_id}.pkl"
-    )
+    return FileResponse(path, filename=f"{model_id}.pkl")

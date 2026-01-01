@@ -1,19 +1,28 @@
-import { Link } from "react-router-dom";
-import { modelRoutes } from "./models/modelRoutes";
+import { useEffect, useState } from "react";
+import { apiFetch } from "./api/client";
+
+type SavedModel = {
+  id: string;
+  algo: string;
+  features: string[];
+};
 
 export default function ModelHome() {
-  return (
-    <div className="min-h-screen flex flex-col items-center gap-4 pt-10">
-      <h1 className="text-2xl font-semibold">ML Playground</h1>
+  const [models, setModels] = useState<SavedModel[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      {modelRoutes.map(m => (
-        <Link
-          key={m.path}
-          to={m.path}
-          className="border px-6 py-2 rounded hover:bg-primary-highlight"
-        >
-          {m.name}
-        </Link>
+  useEffect(() => {
+    apiFetch("/models")
+      .then(setModels)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div>Loading models...</div>;
+
+  return (
+    <div>
+      {models.map(m => (
+        <div key={m.id}>{m.algo}</div>
       ))}
     </div>
   );

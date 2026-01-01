@@ -3,6 +3,7 @@ import data from "../content.json";
 import Dropdown from "../components/dropdown";
 import NumberInput from "../components/number";
 import Button from "../components/Button";
+import { apiUpload } from "../api/upload";
 
 type DropdownItem = {
   id: number;
@@ -20,22 +21,25 @@ type NumberItem = {
   max?: number;
 };
 
+type ModelParams = Record<string, string | number | boolean>;
+
 export default function KNearestNeighbors() {
   const model = data[4];
 
   const dropdown_items = (model?.dropdown?.content ?? []) as DropdownItem[];
   const number_items = (model?.number_input?.content ?? []) as NumberItem[];
 
-  const [params, setParams] = useState<Record<string, any>>({});
+  const [params, setParams] = useState<ModelParams>({});
   const [dataset, setDataset] = useState<File | null>(null);
   const [modelId, setModelId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  function updateParam(id: string, value: any) {
+  function updateParam(id: string, value: string | number | boolean) {
     setParams(prev => ({ ...prev, [id]: value }));
   }
 
   function handleDatasetUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       setDataset(e.target.files[0]);
     }
   }
@@ -51,23 +55,20 @@ export default function KNearestNeighbors() {
     formData.append("params", JSON.stringify(params));
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/train", {
-        method: "POST",
-        body: formData,
-      });
+      setLoading(true);
 
-      if (!res.ok) {
-        throw new Error("Training failed");
-      }
+      const res = await apiUpload("/train", formData);
+      setModelId(res.model_id);
 
-      const data = await res.json();
-      setModelId(data.model_id);
-
-      console.log("Training result:", data);
       alert("Model trained successfully");
-    } catch (err) {
-      console.error(err);
-      alert("Error while training model");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        alert(err.message);
+      } else {
+        alert("Training failed");
+      }
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -77,11 +78,12 @@ export default function KNearestNeighbors() {
       return;
     }
 
-    window.location.href = `http://127.0.0.1:8000/download/${modelId}`;
+    const token = localStorage.getItem("auth_token");
+    window.location.href = `http://localhost:8000/download/${modelId}?token=${token}`;
   }
 
   return (
-    <div className="flex justify-center-safe items-center-safe min-h-screen">
+    <div className="flex justify-center items-center min-h-screen">
       <div className="border-2 rounded bg-primary-highlight border-primary-text pb-4 pt-6 px-5 w-fit">
         <h1 className="text-xl font-semibold mb-4">{model.desc}</h1>
 
@@ -121,22 +123,16 @@ export default function KNearestNeighbors() {
 
         <div className="flex gap-3 mt-6">
           <Button
-            label="Add Dataset"
-            variant="secondary"
-            onClick={() => {
-              if (!dataset) alert("No dataset uploaded");
-            }}
-          />
-
-          <Button
-            label="Create & Fit Model"
+            label={loading ? "Training..." : "Create & Fit Model"}
             onClick={handleFit}
+            disabled={loading}
           />
 
           <Button
             label="Download Model"
             variant="secondary"
             onClick={handleDownload}
+            disabled={!modelId}
           />
         </div>
       </div>
